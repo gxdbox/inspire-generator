@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "灵感发生器 Inspire Generator",
+  "version": "1.0.0",
+  "description": "多维度随机碰撞 + AI 生成的创意灵感刷卡工具",
+  "permissions": ["storage"],
+  "host_permissions": ["https://dashscope-intl.aliyuncs.com/*"],
+  "background": {
+    "service_worker": "scripts/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["scripts/data.js", "scripts/content.js"],
+      "css": ["scripts/content.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["popup/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "action": {
+    "default_title": "灵感发生器"
+  },
+  "icons": {
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
