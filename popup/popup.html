@@ -23,7 +23,6 @@
       <div class="header">
         <span class="gradient-text title">💡 灵感发生器</span>
         <div class="header-btns">
-          <button class="icon-btn" id="settingsBtn" title="AI设置">⚙️</button>
           <button class="icon-btn" id="favBtn" title="收藏">⭐ <span id="favCount" class="badge-num">0</span></button>
         </div>
       </div>
@@ -78,22 +77,7 @@
     </div>
 
     <!-- AI设置面板 -->
-    <div id="settingsPanel" class="float-panel hidden">
-      <div class="float-header"><span>⚙️ AI 设置</span><button class="close-btn">✕</button></div>
-      <div class="setting-group">
-        <label>API Key</label>
-        <input type="password" id="aiKey" placeholder="sk-..." />
-      </div>
-      <div class="setting-group">
-        <label>API URL</label>
-        <input type="text" id="aiUrl" placeholder="https://dashscope-intl.aliyuncs.com/compatible-mode/v1" />
-      </div>
-      <div class="setting-group">
-        <label>模型</label>
-        <input type="text" id="aiModel" placeholder="qwen-plus" />
-      </div>
-      <button id="saveSettings" class="btn-primary" style="margin-top:8px">保存</button>
-    </div>
+    <!-- (AI 免费模型已内置，开箱即用，无需用户配置) -->
 
     <!-- 方法面板 -->
     <div id="methodPanel" class="float-panel hidden">

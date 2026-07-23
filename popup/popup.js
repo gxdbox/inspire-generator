@@ -182,11 +182,6 @@ async function generateInspiration(methodOverride) {
   // Add method prefix
   if (state.currentMethod) cardHtml = `[${state.currentMethod}] ${cardHtml}`;
 
-  // If AI configured, enhance
-  if (state.settings.apiKey) {
-    try { cardHtml = await aiGenerate(cardHtml, rarityKey); } catch {}
-  }
-
   // Build dimension tags
   const tags = picks.map(p => typeof p.pick === 'object' && p.pick.label ? p.pick.label : p.pick).slice(0, 3);
 
@@ -194,12 +189,14 @@ async function generateInspiration(methodOverride) {
   const comboIdx = Math.min(state.combo, COMBO_ENCOURAGEMENTS.length - 1);
   const enc = state.combo >= 1 ? `${state.combo}连击！${COMBO_ENCOURAGEMENTS[comboIdx]}` : ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)];
 
-  // Display
+  // Display base card immediately (raw collision) + loading indicator,
+  // then swap in the AI-enhanced version when it returns.
   rarityBadge.textContent = `${rarity.emoji} ${rarity.label}`;
   rarityBadge.style.color = rarity.color;
   cardText.textContent = cardHtml;
+  cardText.classList.add('loading');
   dimensionTags.innerHTML = tags.map(t => `<span class="dimension-tag">${t}</span>`).join('');
-  encouragement.textContent = enc;
+  encouragement.textContent = '✨ AI 正在润色…';
   inspireCard.className = `inspire-card card-rarity-${rarityKey}`;
 
   state.currentCard = { text: cardHtml, rarity: rarityKey, scene: state.currentScene, tags, method: state.currentMethod };
@@ -207,12 +204,26 @@ async function generateInspiration(methodOverride) {
   // Toast for epic/legendary
   if (RARITY_TOAST[rarityKey]) showToast(RARITY_TOAST[rarityKey]);
 
-  // Show feedback
-  feedbackBar.classList.remove('hidden');
-
   // Reset method after use
   state.currentMethod = null;
   generateBtn.textContent = state.combo >= 1 ? `✨ 刷灵感 (${state.combo})` : '✨ 刷灵感';
+
+  // AI enhancement (always on — free key is baked into background worker).
+  // Falls back silently to the base card if anything fails.
+  try {
+    const enhanced = await aiGenerate(cardHtml, rarityKey);
+    // Only update if the user hasn't generated a newer card in the meantime.
+    if (state.currentCard && state.currentCard.rarity === rarityKey && state.currentCard.text === cardHtml) {
+      cardText.textContent = enhanced;
+      state.currentCard.text = enhanced;
+      encouragement.textContent = enc;
+    }
+  } catch (_) {
+    encouragement.textContent = enc;
+  } finally {
+    cardText.classList.remove('loading');
+    feedbackBar.classList.remove('hidden');
+  }
 }
 
 // ===== Rarity Roll =====
@@ -226,11 +237,10 @@ function rollRarity() {
   return 'common';
 }
 
-// ===== AI Generate =====
+// ===== AI Generate (proxied through background service worker) =====
 async function aiGenerate(basicCard, rarityKey) {
-  const scene = SCENES[state.currentScene];
   const isStory = state.currentScene === 'story';
-  const difficulty = difficultyInput.value.trim() ? `\n用户遇到的困难：${difficultyInput.value.trim()}` : '';
+  const difficulty = difficultyInput.value.trim() ? `\n用户正在纠结的问题：${difficultyInput.value.trim()}` : '';
 
   let profileContext = '';
   if (state.userProfile) {
@@ -242,33 +252,35 @@ async function aiGenerate(basicCard, rarityKey) {
   if (state.feedbackHistory.length > 0) {
     const good = state.feedbackHistory.filter(f => f.vote === 'good').slice(-3).map(f => f.text).join(' | ');
     const bad = state.feedbackHistory.filter(f => f.vote === 'bad').slice(-3).map(f => f.text).join(' | ');
-    if (good) feedbackContext += `\n用户喜欢的风格：${good}`;
-    if (bad) feedbackContext += `\n用户不喜欢的风格：${bad}`;
+    if (good) feedbackContext += `\n用户点赞过的灵感（往这个方向靠）：${good}`;
+    if (bad) feedbackContext += `\n用户点踩过的灵感（避开这种风格）：${bad}`;
   }
 
   const systemPrompt = isStory
-    ? '你是一个天才故事讲述者。根据提供的素材创作一个100-150字的微型故事。必须有转折，有画面感，禁止说教或总结。'
-    : '你是一个创意灵感生成器。根据提供的素材生成60-100字的创意灵感。要有情绪反应，让人眼前一亮。';
+    ? '你是一个会讲故事的灵感缪斯。根据素材写一段80-120字的微型故事开头，必须有一个具体的画面、一个出人意料的小转折，结尾留个钩子让人想继续写下去。禁止说教、禁止总结升华、禁止"这个故事告诉我们"。直接给故事，不要任何前缀说明。'
+    : '你是一个能点燃气灵感的缪斯。根据素材生成一段50-80字的创意火花：要具体、有画面感、有一个让人"咦？"的反常识角度或意外连接。语气像在跟朋友兴奋地分享一个发现，不要书面化、不要空泛的套话、不要分点罗列。直接给灵感本身，不要任何前缀说明。';
 
-  const rarityBoost = rarityKey === 'legendary' ? '要求：这必须是一个令人震惊、前所未见的创意！' :
-    rarityKey === 'epic' ? '要求：这是一个非常出色的创意，要让人印象深刻。' :
-    rarityKey === 'rare' ? '要求：这是一个不错的创意，比普通的好一些。' : '';
+  const rarityBoost = rarityKey === 'legendary' ? '\n这是一张"传说级"卡片：给我一个前所未见、足以让人停下所有事去记录的炸裂创意。' :
+    rarityKey === 'epic' ? '\n这是一张"史诗级"卡片：要非常出彩、让人眼前一亮、忍不住收藏。' :
+    rarityKey === 'rare' ? '\n这是一张"稀有级"卡片：比普通灵感更有巧思一些。' : '';
 
-  const userPrompt = `基于以下素材：${basicCard}${difficulty}${profileContext}${feedbackContext}\n${rarityBoost}`;
+  const userPrompt = `灵感素材：${basicCard}${difficulty}${profileContext}${feedbackContext}${rarityBoost}`;
 
-  try {
-    const resp = await fetch(state.settings.apiUrl || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.settings.apiKey}` },
-      body: JSON.stringify({
-        model: state.settings.apiModel || 'qwen-plus',
-        messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
-        temperature: 1.0, max_tokens: 250,
-      }),
-    });
-    const data = await resp.json();
-    return data.choices?.[0]?.message?.content?.trim() || basicCard;
-  } catch { return basicCard; }
+  const result = await new Promise((resolve, reject) => {
+    try {
+      chrome.runtime.sendMessage(
+        { type: 'aiGenerate', payload: { systemPrompt, userPrompt, temperature: 1.0, maxTokens: 300 } },
+        (resp) => {
+          const err = chrome.runtime.lastError;
+          if (err) return reject(new Error(err.message));
+          if (resp && resp.ok) return resolve(resp.text);
+          reject(new Error(resp?.error || 'AI error'));
+        }
+      );
+    } catch (e) { reject(e); }
+  });
+
+  return result || basicCard;
 }
 
 // ===== Favorites =====

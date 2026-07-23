@@ -1,0 +1,8 @@
+name = "inspire-ai-proxy"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# These are set via `wrangler secret put` (never in this file):
+#   AI_API_KEY  — your DashScope API key
+#   AI_API_URL  — https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+#   PROXY_TOKEN — shared token the extension uses to authenticate

@@ -1,0 +1,10 @@
+# Secrets — NEVER commit
+worker/deploy.sh
+
+# Test / utility scripts (not part of the extension)
+test_api.py
+check_*.py
+
+# OS / editor
+.DS_Store
+node_modules/
