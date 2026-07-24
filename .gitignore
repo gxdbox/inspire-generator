@@ -4,6 +4,9 @@ worker/deploy.sh
 # Test / utility scripts (not part of the extension)
 test_api.py
 check_*.py
+worker/register-subdomain.sh
+worker/register_and_deploy.py
+/tmp/test_w*.py
 
 # OS / editor
 .DS_Store

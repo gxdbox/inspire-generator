@@ -6,7 +6,7 @@
 
 // AI 请求走 Cloudflare Worker 代理（key 在 Worker 服务端，插件里没有）
 const AI_CONFIG = {
-  proxyUrl: 'https://inspire-ai-proxy.REPLACE_SUBDOMAIN.workers.dev',
+  proxyUrl: 'https://inspire-ai-proxy.inspire-ai-proxy.workers.dev',
   proxyToken: '0HK4cTmFYZkaGtgZq7B4w5hn0tLXEX63',
   model: 'qwen-flash',
 };
