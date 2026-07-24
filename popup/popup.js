@@ -7,7 +7,7 @@ const RARITY_KEYS = Object.keys(RARITY);
 const RARITY_TOAST = {epic:"🔥 史诗级灵感！万里挑一！",legendary:"👑 传说级灵感！天选之人！"};
 const ENCOURAGEMENTS = ["✨ 不完美的开始胜过完美的等待","🌟 每一个灵感都值得被记录","💪 你离突破只差一个灵感的距离","🎯 创意的秘诀就是不断碰撞","🚀 这个灵感有潜力的味道","🌈 保持这个状态，你会收获更多","⚡ 思维正在活跃中","🔥 你已经超越了昨天的自己","🎆 灵感爆发期！继续！","🏆 你就是创意之王！"];
 const COMBO_ENCOURAGEMENTS = ["✨ 不完美的开始","🌟 再来一个！","💪 手感来了","🎯 渐入佳境","🚀 灵感涌现","🌈 思维打开中","⚡ 创意源源不断","🔥 进入状态了！","🎆 灵感爆发🔥","👑 10连击破纪录！"];
-const IDENTITY_OPTIONS = [{id:"developer",label:"开发者",emoji:"💻"},{id:"designer",label:"设计师",emoji:"🎨"},{id:"writer",label:"写作者",emoji:"✍️"},{id:"founder",label:"创业者",emoji:"🚀"},{id:"marketer",label:"市场运营",emoji:"📈"},{id:"student",label:"学生",emoji:"🎓"},{id:"pm",label:"产品经理",emoji:"📋"},{id:"artist",label:"艺术创作者",emoji:"🎭"}];
+const IDENTITY_OPTIONS = [{id:"developer",label:"开发者",emoji:"💻"},{id:"designer",label:"设计师",emoji:"🎨"},{id:"writer",label:"写作者",emoji:"✍️"},{id:"founder",label:"创业者",emoji:"🚀"},{id:"marketer",label:"市场运营",emoji:"📈"},{id:"student",label:"学生",emoji:"🎓"},{id:"pm",label:"产品经理",emoji:"📋"},{id:"artist",label:"艺术创作者",emoji:"🎭"},{id:"other",label:"其他",emoji:"🌈"}];
 const INTEREST_OPTIONS = ["人工智能","Web开发","移动应用","开源项目","写作创作","阅读","电影","音乐","设计","摄影","游戏","运动健身","心理学","商业","投资","教育","烹饪","旅行","语言学习","手工制作"];
 const CANVAS_KEY = 'inspire_generator_data';
 
@@ -80,29 +80,91 @@ async function init() {
 // ===== Onboarding =====
 function renderOnboarding() {
   const identityGrid = $('identityGrid');
-  identityGrid.innerHTML = IDENTITY_OPTIONS.map(o => `<button data-id="${o.id}">${o.emoji} ${o.label}</button>`).join('');
   const interestGrid = $('interestGrid');
+  const otherInput = $('otherIdentityInput');
+  const doneBtn = $('onboardingDone');
+  const skipBtn = $('onboardingSkip');
+  const hint = $('onboardingHint');
+  const MIN_INTERESTS = 3;
+
+  identityGrid.innerHTML = IDENTITY_OPTIONS.map(o => `<button data-id="${o.id}">${o.emoji} ${o.label}</button>`).join('');
   interestGrid.innerHTML = INTEREST_OPTIONS.map(o => `<button data-interest="${o}">${o}</button>`).join('');
+
   let selectedIdentity = null, selectedInterests = [];
-  document.querySelectorAll('#identityGrid button').forEach(b => b.onclick = () => {
-    document.querySelectorAll('#identityGrid button').forEach(x => x.classList.remove('selected'));
-    b.classList.add('selected'); selectedIdentity = b.dataset.id; checkDone();
+
+  // 身份选择：点"其他"展开输入框
+  identityGrid.querySelectorAll('button').forEach(b => b.onclick = () => {
+    identityGrid.querySelectorAll('button').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+    selectedIdentity = b.dataset.id;
+    otherInput.classList.toggle('hidden', selectedIdentity !== 'other');
+    if (selectedIdentity === 'other') otherInput.focus();
+    refresh();
   });
-  document.querySelectorAll('#interestGrid button').forEach(b => b.onclick = () => {
+
+  // 兴趣多选
+  interestGrid.querySelectorAll('button').forEach(b => b.onclick = () => {
     b.classList.toggle('selected');
     const v = b.dataset.interest;
     selectedInterests = selectedInterests.includes(v) ? selectedInterests.filter(x => x !== v) : [...selectedInterests, v];
-    checkDone();
+    refresh();
   });
-  function checkDone() {
-    $('onboardingDone').style.display = (selectedIdentity && selectedInterests.length >= 3) ? 'block' : 'none';
+
+  // 始终显示按钮 + 进度文案（不再隐藏）
+  function refresh() {
+    const identityOk = selectedIdentity && (selectedIdentity !== 'other' || otherInput.value.trim());
+    const count = selectedInterests.length;
+    const enough = count >= MIN_INTERESTS;
+
+    // 按钮始终可见，只是 disabled 与否
+    doneBtn.disabled = !(identityOk && enough);
+
+    // 进度提示：传达规则 + 当前进度
+    const parts = [];
+    if (!identityOk) parts.push('选一个身份');
+    if (!enough) {
+      const left = MIN_INTERESTS - count;
+      parts.push(count === 0 ? `选 ${MIN_INTERESTS} 个兴趣` : `再选 ${left} 个兴趣`);
+    }
+    hint.textContent = parts.length ? parts.join('，') + `（${count}/${MIN_INTERESTS}）` : '👌 可以开始啦';
   }
-  $('onboardingDone').onclick = async () => {
-    state.userProfile = { identity: selectedIdentity, interests: selectedInterests };
+
+  // 完成：保存档案进入主面板
+  async function finish() {
+    let identity = selectedIdentity;
+    if (identity === 'other') {
+      const custom = otherInput.value.trim();
+      identity = custom ? `other:${custom}` : 'other';
+    }
+    state.userProfile = { identity, interests: selectedInterests };
     await saveState();
-    onboarding.classList.add('hidden'); mainPanel.classList.remove('hidden');
+    onboarding.classList.add('hidden');
+    mainPanel.classList.remove('hidden');
+    generateBtn.textContent = '✨ 刷灵感';
+  }
+
+  doneBtn.onclick = finish;
+  // 跳过兜底：没选够也能进，但已选的内容会保留
+  skipBtn.onclick = async () => {
+    if (!selectedIdentity && selectedInterests.length === 0) {
+      // 完全没选 → 给个默认档案，避免每次进来都弹引导
+      state.userProfile = { identity: null, interests: [] };
+    } else {
+      let identity = selectedIdentity;
+      if (identity === 'other') {
+        const custom = otherInput.value.trim();
+        identity = custom ? `other:${custom}` : 'other';
+      }
+      state.userProfile = { identity, interests: selectedInterests };
+    }
+    await saveState();
+    onboarding.classList.add('hidden');
+    mainPanel.classList.remove('hidden');
     generateBtn.textContent = '✨ 刷灵感';
   };
+
+  otherInput.addEventListener('input', refresh);
+  refresh();
 }
 
 // ===== Render Scene Tabs =====
@@ -244,8 +306,17 @@ async function aiGenerate(basicCard, rarityKey) {
 
   let profileContext = '';
   if (state.userProfile) {
-    const idLabel = IDENTITY_OPTIONS.find(o => o.id === state.userProfile.identity)?.label || state.userProfile.identity;
-    profileContext = `\n用户身份：${idLabel}\n用户兴趣：${state.userProfile.interests.join('、')}`;
+    const parts = [];
+    if (state.userProfile.identity) {
+      if (state.userProfile.identity.startsWith('other:')) {
+        parts.push(`用户身份：${state.userProfile.identity.slice(6)}`);
+      } else {
+        const idLabel = IDENTITY_OPTIONS.find(o => o.id === state.userProfile.identity)?.label || state.userProfile.identity;
+        parts.push(`用户身份：${idLabel}`);
+      }
+    }
+    if (state.userProfile.interests?.length) parts.push(`用户兴趣：${state.userProfile.interests.join('、')}`);
+    if (parts.length) profileContext = '\n' + parts.join('\n');
   }
 
   let feedbackContext = '';

@@ -12,9 +12,13 @@
     <div id="onboarding" class="panel hidden">
       <h2 class="gradient-text">🎯 你是谁？</h2>
       <div id="identityGrid" class="grid-4"></div>
+      <input id="otherIdentityInput" class="other-identity-input hidden" maxlength="10" placeholder="说说你的身份…"/>
       <h2 class="gradient-text" style="margin-top:16px">🌟 你对什么感兴趣？</h2>
+      <p class="onboarding-sub">至少选 3 个，灵感会更懂你</p>
       <div id="interestGrid" class="grid-3"></div>
-      <button id="onboardingDone" class="btn-primary" style="margin-top:16px;display:none">开始探索 →</button>
+      <p id="onboardingHint" class="onboarding-hint"></p>
+      <button id="onboardingDone" class="btn-primary onboarding-done" disabled>开始探索 →</button>
+      <button id="onboardingSkip" class="skip-link">先跳过，看看再说 →</button>
     </div>
 
     <!-- 主面板 -->
