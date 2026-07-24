@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>隐私政策 · 灵感发生器 Inspire Generator</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0d16; --surface:#141625; --surface2:#1a1d30; --line:#242841;
+    --text:#dfe2ee; --muted:#9aa0b5; --accent:#8b7cf6; --accent2:#ff6b9d; --ok:#4ade80;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--text);
+    font:15px/1.85 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background-image:
+      radial-gradient(700px 400px at 85% -5%, rgba(139,124,246,.10), transparent 60%),
+      radial-gradient(600px 350px at -10% 30%, rgba(255,107,157,.06), transparent 60%);
+    background-attachment:fixed;
+  }
+  .display{font-family:'Sora',-apple-system,"PingFang SC",sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+  /* ── 顶部品牌带 ── */
+  header{border-bottom:1px solid var(--line);padding:40px 0 32px}
+  .brand{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .mark{
+    width:56px;height:56px;flex:none;border-radius:16px 16px 16px 4px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:grid;place-items:center;font-size:28px;
+    box-shadow:0 8px 28px rgba(139,124,246,.35);
+    animation:bob 5s ease-in-out infinite;
+  }
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .brand h1{font-size:clamp(28px,4vw,42px);font-weight:800;letter-spacing:.5px;line-height:1.2}
+  .brand h1 small{display:block;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:3px;margin-top:4px}
+  .meta{margin-left:auto;text-align:right;font-size:12px;color:var(--muted);line-height:2}
+  .meta b{color:var(--text)}
+  .meta .tag{
+    display:inline-block;padding:1px 10px;border:1px solid var(--line);border-radius:999px;
+    color:var(--accent);font-weight:600;
+  }
+
+  /* ── 英文摘要 ── */
+  .en-note{
+    margin-top:28px;padding:16px 20px;border-left:3px solid var(--accent);
+    background:var(--surface);border-radius:0 12px 12px 0;
+    color:var(--muted);font-size:13px;line-height:1.75;
+  }
+  .en-note b{color:var(--text)}
+
+  /* ── 布局：目录 + 正文 ── */
+  .layout{display:grid;grid-template-columns:200px 1fr;gap:48px;padding:44px 0 80px}
+  nav.toc{position:sticky;top:32px;align-self:start;font-size:13px}
+  nav.toc .toc-title{font-weight:800;font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:14px}
+  nav.toc a{
+    display:block;padding:7px 12px;color:var(--muted);text-decoration:none;
+    border-left:2px solid var(--line);transition:all .2s;
+  }
+  nav.toc a:hover{color:var(--text);border-color:var(--accent);transform:translateX(3px)}
+  nav.toc a.active{color:var(--accent);border-color:var(--accent);background:linear-gradient(90deg,rgba(139,124,246,.12),transparent)}
+
+  /* ── TL;DR ── */
+  .tldr{
+    background:var(--surface2);border:1px solid var(--line);border-radius:14px;
+    padding:24px 26px;margin-bottom:48px;position:relative;overflow:hidden;
+  }
+  .tldr::after{
+    content:"TL;DR";position:absolute;right:-8px;top:-14px;
+    font:800 64px 'Sora',sans-serif;color:rgba(139,124,246,.09);letter-spacing:2px;
+  }
+  .tldr h2{font-size:17px;font-weight:800;margin-bottom:16px}
+  .tldr h2 span{color:var(--accent)}
+  .tldr ul{list-style:none}
+  .tldr li{display:flex;gap:12px;align-items:flex-start;padding:7px 0;color:#c6cadb}
+  .tldr li i{
+    flex:none;width:22px;height:22px;border-radius:7px 7px 7px 2px;margin-top:2px;
+    display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;
+    background:rgba(74,222,128,.12);color:var(--ok);border:1px solid rgba(74,222,128,.3);
+  }
+  .tldr li.warn i{background:rgba(255,107,157,.1);color:var(--accent2);border-color:rgba(255,107,157,.3)}
+
+  /* ── 章节 ── */
+  section{margin-bottom:44px}
+  section h2{
+    font-size:20px;font-weight:800;display:flex;align-items:baseline;gap:14px;
+    padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:20px;
+  }
+  section h2 .num{font:800 30px 'Sora',sans-serif;color:transparent;-webkit-text-stroke:1px rgba(139,124,246,.55);letter-spacing:1px}
+  section p{margin-bottom:14px;color:#c6cadb}
+  section p strong, section li strong{color:var(--text)}
+  section ul{margin:0 0 14px 4px;list-style:none}
+  section ul li{padding:5px 0 5px 22px;position:relative;color:#c6cadb}
+  section ul li::before{content:"▸";position:absolute;left:2px;color:var(--accent)}
+  a.inline{color:var(--accent);text-decoration:none;border-bottom:1px dashed rgba(139,124,246,.5)}
+  a.inline:hover{border-bottom-style:solid;color:#b5a9ff}
+  code{
+    background:var(--surface2);border:1px solid var(--line);border-radius:6px;
+    padding:1px 7px;font-size:12.5px;color:#b5a9ff;
+  }
+
+  /* ── 数据表格 ── */
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px}
+  th{
+    text-align:left;padding:12px 16px;font-size:11px;letter-spacing:2px;font-weight:800;
+    color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line);
+  }
+  td{padding:12px 16px;border-bottom:1px solid var(--line);color:#c6cadb;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tbody tr{transition:background .15s}
+  tbody tr:hover{background:rgba(139,124,246,.06)}
+  td b{color:var(--text)}
+  .chip{
+    display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:999px;white-space:nowrap;
+  }
+  .chip.local{background:rgba(74,222,128,.1);color:var(--ok);border:1px solid rgba(74,222,128,.3)}
+  .chip.ai{background:rgba(255,107,157,.1);color:var(--accent2);border:1px solid rgba(255,107,157,.3)}
+
+  .callout{
+    background:rgba(139,124,246,.07);border:1px solid rgba(139,124,246,.25);
+    border-radius:12px;padding:16px 20px;margin:16px 0;font-size:13.5px;color:#c6cadb;
+  }
+  .callout b{color:var(--accent)}
+
+  footer{border-top:1px solid var(--line);padding:28px 0 60px;color:var(--muted);font-size:12.5px}
+  footer .row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+
+  #toTop{
+    position:fixed;right:28px;bottom:28px;width:44px;height:44px;border-radius:12px;
+    background:var(--surface2);border:1px solid var(--line);color:var(--accent);
+    font-size:18px;cursor:pointer;opacity:0;pointer-events:none;transform:translateY(8px);
+    transition:all .25s;
+  }
+  #toTop.show{opacity:1;pointer-events:auto;transform:none}
+  #toTop:hover{border-color:var(--accent);box-shadow:0 6px 20px rgba(139,124,246,.25)}
+
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(max-width:860px){
+    .layout{grid-template-columns:1fr;gap:0}
+    nav.toc{position:static;display:flex;flex-wrap:wrap;gap:6px;margin-bottom:32px}
+    nav.toc .toc-title{display:none}
+    nav.toc a{border:1px solid var(--line);border-left:1px solid var(--line);border-radius:999px;padding:5px 13px}
+    nav.toc a.active{background:rgba(139,124,246,.14)}
+    .meta{margin-left:0;text-align:left;width:100%}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <div class="mark">💡</div>
+      <h1>隐私政策<small>PRIVACY POLICY · 灵感发生器 INSPIRE GENERATOR</small></h1>
+      <div class="meta">
+        <div>版本 <b>1.0</b> · 生效日期 <b>2026年7月24日</b></div>
+        <div><span class="tag">无需注册</span> <span class="tag">数据存本机</span> <span class="tag">无追踪</span></div>
+      </div>
+    </div>
+    <div class="en-note">
+      <b>English summary:</b> Inspire Generator requires no account. All your data (profile, favorites, feedback) is stored <b>locally on your device</b> and never uploaded to our servers. The only data sent to a third party is the inspiration text (plus any problem description you voluntarily enter) transmitted to an AI service (Alibaba Cloud DashScope) to polish generated ideas. No analytics, no tracking, no ads.
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="layout">
+
+    <nav class="toc" id="toc">
+      <div class="toc-title">目录</div>
+      <a href="#tldr" class="active">快速了解</a>
+      <a href="#s1">1. 我们收集什么</a>
+      <a href="#s2">2. 我们不收集什么</a>
+      <a href="#s3">3. 第三方服务</a>
+      <a href="#s4">4. 存储与安全</a>
+      <a href="#s5">5. 权限说明</a>
+      <a href="#s6">6. 你的控制权</a>
+      <a href="#s7">7. 未成年人</a>
+      <a href="#s8">8. 政策变更</a>
+      <a href="#s9">9. 联系我们</a>
+    </nav>
+
+    <main>
+      <div class="tldr reveal" id="tldr">
+        <h2><span>⚡</span> 30 秒读完版</h2>
+        <ul>
+          <li><i>✓</i>无需注册账号，不收集姓名、手机号、邮箱等任何个人信息</li>
+          <li><i>✓</i>你的所有偏好、收藏、反馈都存在<strong>你自己的浏览器里</strong>，不会上传到任何服务器</li>
+          <li><i>✓</i>无统计埋点、无广告、不追踪你的浏览行为</li>
+          <li class="warn"><i>!</i>唯一例外：生成的灵感文本（以及你主动填写的"困难描述"）会发送给第三方 AI 服务进行润色，详见第 3 节</li>
+        </ul>
+      </div>
+
+      <section class="reveal" id="s1">
+        <h2><span class="num">01</span>我们收集什么</h2>
+        <p>为了提供个性化灵感，扩展会记录以下数据。<strong>全部仅保存在你本机的浏览器存储中</strong>（Chrome 扩展的本地存储空间），我们没有任何服务器接收或保存它们：</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>数据</th><th>内容</th><th>用途</th><th>去向</th></tr></thead>
+            <tbody>
+              <tr><td><b>用户档案</b></td><td>你在引导页选择的身份与兴趣标签</td><td>让灵感更贴合你的背景</td><td><span class="chip local">仅本机</span></td></tr>
+              <tr><td><b>收藏列表</b></td><td>你点击收藏的灵感卡片</td><td>随时回看喜欢的灵感</td><td><span class="chip local">仅本机</span></td></tr>
+              <tr><td><b>反馈记录</b></td><td>你对灵感的 👍 / 👎 评价</td><td>作为上下文帮助 AI 调整风格</td><td><span class="chip local">仅本机</span> + <span class="chip ai">摘要发往 AI</span></td></tr>
+              <tr><td><b>困难描述</b></td><td>你主动填写的"遇到的困难"文字</td><td>让 AI 结合你的问题生成灵感</td><td><span class="chip ai">发往 AI</span></td></tr>
+              <tr><td><b>自定义场景</b></td><td>你创建的素材维度与名称</td><td>扩展玩法</td><td><span class="chip local">仅本机</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout">标记 <b>"发往 AI"</b> 的数据，只在你点击"刷灵感"的那一刻随当次请求发出，用于生成/润色文本，不会被我们留存。</div>
+      </section>
+
+      <section class="reveal" id="s2">
+        <h2><span class="num">02</span>我们不收集什么</h2>
+        <ul>
+          <li><strong>个人信息</strong>——姓名、手机号、邮箱、位置，一律不收集（因为没有账号系统，无从收集）</li>
+          <li><strong>浏览内容</strong>——扩展虽然注入在所有页面（为了显示悬浮面板），但<strong>不读取、不记录</strong>任何页面内容</li>
+          <li><strong>行为追踪</strong>——无统计 SDK、无埋点、无 Cookie 追踪、无指纹识别</li>
+          <li><strong>广告数据</strong>——扩展不含任何广告</li>
+        </ul>
+      </section>
+
+      <section class="reveal" id="s3">
+        <h2><span class="num">03</span>第三方服务</h2>
+        <p>当你点击"刷灵感"时，扩展会把当次的<strong>灵感素材文本</strong>（若你填写了困难描述或有过反馈，也会一并以摘要形式包含）发送给 AI 服务进行文字润色。链路如下：</p>
+        <ul>
+          <li><strong>Cloudflare Workers</strong>（请求代理）——仅转发请求，API 密钥保存在代理端，扩展本身不含任何密钥。隐私政策：<a class="inline" href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">cloudflare.com/privacypolicy</a></li>
+          <li><strong>阿里云百炼 DashScope</strong>（通义千问模型）——实际生成文本的 AI 服务。隐私政策：<a class="inline" href="https://www.aliyun.com/policy/privacy" target="_blank" rel="noopener">aliyun.com/policy/privacy</a></li>
+        </ul>
+        <div class="callout"><b>提示：</b>请不要在"困难描述"中输入你不愿让第三方看到的敏感信息（如密码、身份证、商业机密等）。该输入框为可选功能，留空则只发送随机灵感素材。</div>
+      </section>
+
+      <section class="reveal" id="s4">
+        <h2><span class="num">04</span>数据存储与安全</h2>
+        <p>所有本地数据通过 Chrome 提供的 <code>chrome.storage.local</code> 接口保存在你的设备上，受浏览器自身的沙箱机制保护，其他网站和普通网页脚本无法读取。</p>
+        <p>由于数据不在我们的服务器上，即使我们的服务停止运营，你的数据依然留在你的浏览器里，由你自行处置。</p>
+      </section>
+
+      <section class="reveal" id="s5">
+        <h2><span class="num">05</span>权限说明</h2>
+        <ul>
+          <li><code>storage</code> —— 读写上述本机存储（档案、收藏、反馈等）</li>
+          <li><code>https://*.workers.dev/*</code> —— 仅用于调用 AI 代理接口，不访问其他网站</li>
+          <li><code>所有网站</code>（内容脚本）—— 让你能在任意页面唤起悬浮灵感面板；脚本只注入界面元素，<strong>不读取页面内容</strong></li>
+        </ul>
+      </section>
+
+      <section class="reveal" id="s6">
+        <h2><span class="num">06</span>你的控制权</h2>
+        <ul>
+          <li><strong>随时删除全部数据</strong>——在 Chrome 中卸载本扩展，所有本地数据立即清除</li>
+          <li><strong>精细删除</strong>——在扩展的收藏面板中可逐条删除收藏；重新完成引导页可重置档案</li>
+          <li><strong>停用 AI 润色</strong>——困难描述留空、不点反馈，即可将发往第三方的内容降到最低</li>
+        </ul>
+      </section>
+
+      <section class="reveal" id="s7">
+        <h2><span class="num">07</span>未成年人保护</h2>
+        <p>本扩展面向所有人群，不主动收集任何用户（包括 14 周岁以下未成年人）的个人信息。由于不存在账号与服务器存储，儿童使用本扩展不会产生需要监护人担忧的数据收集行为。</p>
+      </section>
+
+      <section class="reveal" id="s8">
+        <h2><span class="num">08</span>政策变更</h2>
+        <p>如本政策发生实质性变化（例如新增数据收集项），我们会更新本页顶部标注的版本号与生效日期，并在扩展更新日志中说明。继续使用扩展即视为接受更新后的政策。</p>
+      </section>
+
+      <section class="reveal" id="s9">
+        <h2><span class="num">09</span>联系我们</h2>
+        <p>对本政策或扩展的隐私实践有任何疑问，欢迎通过以下方式联系：</p>
+        <ul>
+          <li>GitHub 项目主页（可提交 Issue）：<a class="inline" href="https://github.com/gxdbox/inspire-generator" target="_blank" rel="noopener">github.com/gxdbox/inspire-generator</a></li>
+          <li>邮箱：[请填写你的联系邮箱]</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <span>© 2026 灵感发生器 Inspire Generator</span>
+      <span>💡 数据只属于你自己</span>
+    </div>
+  </div>
+</footer>
+
+<button id="toTop" title="回到顶部">↑</button>
+
+<script>
+  // 滚动显现
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // 目录高亮
+  const links = [...document.querySelectorAll('#toc a')];
+  const secs = links.map(a => document.querySelector(a.getAttribute('href')));
+  addEventListener('scroll', () => {
+    let i = 0;
+    secs.forEach((s, idx) => { if (s && s.getBoundingClientRect().top < 140) i = idx; });
+    links.forEach((a, idx) => a.classList.toggle('active', idx === i));
+    document.getElementById('toTop').classList.toggle('show', scrollY > 400);
+  }, { passive: true });
+
+  document.getElementById('toTop').onclick = () => scrollTo({ top: 0, behavior: 'smooth' });
+</script>
+</body>
+</html>
