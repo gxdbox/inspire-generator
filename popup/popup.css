@@ -10,7 +10,7 @@ body {
 
 #app { height: 100%; display: flex; flex-direction: column; position: relative; }
 
-.panel { display: flex; flex-direction: column; height: 100%; padding: 12px; overflow-y: auto; }
+.panel { display: flex; flex-direction: column; height: 100%; padding: 12px; overflow-y: auto; scrollbar-gutter: stable; }
 .hidden { display: none !important; }
 
 /* 渐变文字 */
@@ -154,6 +154,7 @@ body {
 .float-panel {
   position: absolute; inset: 0; background: #0f0f1a; z-index: 50;
   display: flex; flex-direction: column; padding: 12px;
+  overflow-y: auto;
 }
 .float-header {
   display: flex; justify-content: space-between; align-items: center;
@@ -198,7 +199,9 @@ body {
 }
 
 /* 引导页 */
-#onboarding { justify-content: center; align-items: center; padding: 24px; }
+#onboarding {
+  justify-content: flex-start; align-items: flex-start; padding: 16px 16px 32px;
+}
 .grid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 8px; }
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; width: 100%; margin-top: 8px; }
 .grid-4 button, .grid-3 button {

@@ -492,8 +492,14 @@ function bindEvents() {
     hideAllPanels();
   };
 
-  // Close buttons
-  document.querySelectorAll('.close-btn').forEach(b => b.onclick = () => hideAllPanels());
+  // Close buttons — use direct onclick, prevent default
+  document.querySelectorAll('.close-btn').forEach(b => {
+    b.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      hideAllPanels();
+    };
+  });
 }
 
 // ===== Start =====
