@@ -31,23 +31,38 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 /* ---------- AI call (via Cloudflare Worker proxy) ---------- */
+const AI_TIMEOUT_MS = 30000; // 30s 超时，防止请求挂死
+
 async function handleAiGenerate({ systemPrompt, userPrompt, temperature = 1.0, maxTokens = 300 }) {
-  const resp = await fetch(AI_CONFIG.proxyUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${AI_CONFIG.proxyToken}`,
-    },
-    body: JSON.stringify({
-      model: AI_CONFIG.model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature,
-      max_tokens: Math.min(maxTokens, 500),
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
+
+  let resp;
+  try {
+    resp = await fetch(AI_CONFIG.proxyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AI_CONFIG.proxyToken}`,
+      },
+      body: JSON.stringify({
+        model: AI_CONFIG.model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature,
+        max_tokens: Math.min(maxTokens, 500),
+        enable_thinking: false,
+      }),
+      signal: controller.signal,
+    });
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('AI 请求超时，请重试');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!resp.ok) {
     const body = await resp.text().catch(() => '');

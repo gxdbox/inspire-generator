@@ -50,12 +50,12 @@
             <div class="card-front">
               <div id="rarityBadge" class="rarity-badge"></div>
               <div id="cardText" class="card-text">点击「刷灵感」开始 ✨</div>
-              <div id="dimensionTags" class="dimension-tags"></div>
               <div id="encouragement" class="encouragement"></div>
             </div>
           </div>
         </div>
       </div>
+      <div class="swipe-hint">← 左滑卡片也能刷下一条</div>
 
       <!-- 操作栏 -->
       <div class="action-bar">
@@ -98,15 +98,9 @@
     <!-- 新建场景面板 -->
     <div id="newScenePanel" class="float-panel hidden">
       <div class="float-header"><span>📦 新建场景</span><button class="close-btn">✕</button></div>
-      <div class="setting-group"><label>名称</label><input id="nsName" placeholder="场景名称" maxlength="10"/></div>
+      <div class="setting-group"><label>名称</label><input id="nsName" placeholder="如：科幻、美食、旅行…" maxlength="10"/></div>
       <div class="setting-group"><label>Emoji</label><input id="nsEmoji" placeholder="📦" maxlength="2"/></div>
-      <div class="setting-group"><label>维度1名称</label><input id="nsDim1" placeholder="如：风格" maxlength="6"/></div>
-      <div class="setting-group"><label>维度1素材（逗号分隔）</label><input id="nsDim1Pool" placeholder="素材1,素材2,素材3"/></div>
-      <div class="setting-group"><label>维度2名称</label><input id="nsDim2" placeholder="如：角色" maxlength="6"/></div>
-      <div class="setting-group"><label>维度2素材（逗号分隔）</label><input id="nsDim2Pool" placeholder="素材1,素材2,素材3"/></div>
-      <div class="setting-group"><label>可见性</label>
-        <select id="nsVisibility"><option value="local">仅本机</option></select>
-      </div>
+      <div class="setting-group"><label>提示词（告诉 AI 你要什么样的灵感）</label><textarea id="nsPrompt" class="ns-prompt" maxlength="500" placeholder="例如：你是一个科幻点子机器。每次生成一个让人“这也能行？”的科幻设定，要跟当代生活产生关联…"></textarea></div>
       <button id="nsSave" class="btn-primary" style="margin-top:8px">保存场景</button>
     </div>
   </div>

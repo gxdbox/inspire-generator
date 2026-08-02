@@ -8,6 +8,7 @@
   'use strict';
 
   const STORAGE_KEY = 'inspire_bubble_pos';
+  const PANEL_STORAGE_KEY = 'inspire_panel_pos';
   const BUBBLE_SIZE   = 56;
   const PANEL_WIDTH   = 380;
   const PANEL_HEIGHT  = 580;
@@ -19,13 +20,20 @@
   let panel        = null;
   let panelVisible = false;
 
-  // Drag state
+  // Drag state (bubble)
   let isDragging     = false;
   let wasDragged     = false;
   let dragStartX     = 0;
   let dragStartY     = 0;
   let bubbleStartX   = 0;
   let bubbleStartY   = 0;
+
+  // Drag state (panel)
+  let panelDragging    = false;
+  let panelDragStartX  = 0;
+  let panelDragStartY  = 0;
+  let panelStartX      = 0;
+  let panelStartY      = 0;
 
   /* ==========================================================
      Injection
@@ -192,6 +200,12 @@
     panel = document.createElement('div');
     panel.id = 'inspire-panel';
 
+    // Drag handle bar
+    const handle = document.createElement('div');
+    handle.className = 'inspire-panel-handle';
+    handle.innerHTML = '<span class="inspire-handle-grip"></span>';
+    panel.appendChild(handle);
+
     const iframe = document.createElement('iframe');
     iframe.src = chrome.runtime.getURL('popup/popup.html');
     iframe.setAttribute('frameborder', '0');
@@ -199,6 +213,88 @@
     panel.appendChild(iframe);
 
     document.body.appendChild(panel);
+    attachPanelDragListeners(handle);
+  }
+
+  /* ==========================================================
+     Panel dragging
+     ========================================================== */
+
+  function attachPanelDragListeners (handle) {
+    handle.addEventListener('mousedown', onPanelDragStart);
+    handle.addEventListener('touchstart', onPanelDragStart, { passive: false });
+  }
+
+  function onPanelDragStart (e) {
+    if (e.type === 'mousedown' && e.button !== 0) return;
+    e.preventDefault();
+
+    panelDragging = true;
+    panel.classList.add('dragging');
+
+    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+    panelDragStartX = clientX;
+    panelDragStartY = clientY;
+    panelStartX = panel.offsetLeft;
+    panelStartY = panel.offsetTop;
+
+    document.addEventListener('mousemove', onPanelDragMove);
+    document.addEventListener('mouseup', onPanelDragEnd);
+    document.addEventListener('touchmove', onPanelDragMove, { passive: false });
+    document.addEventListener('touchend', onPanelDragEnd);
+  }
+
+  function onPanelDragMove (e) {
+    if (!panelDragging) return;
+
+    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+    let newX = panelStartX + (clientX - panelDragStartX);
+    let newY = panelStartY + (clientY - panelDragStartY);
+
+    // Keep within viewport
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    newX = Math.max(4, Math.min(newX, vw - PANEL_WIDTH - 4));
+    newY = Math.max(4, Math.min(newY, vh - 40));
+
+    panel.style.left = newX + 'px';
+    panel.style.top  = newY + 'px';
+  }
+
+  function onPanelDragEnd () {
+    document.removeEventListener('mousemove', onPanelDragMove);
+    document.removeEventListener('mouseup', onPanelDragEnd);
+    document.removeEventListener('touchmove', onPanelDragMove);
+    document.removeEventListener('touchend', onPanelDragEnd);
+
+    if (!panelDragging) return;
+    panelDragging = false;
+    panel.classList.remove('dragging');
+
+    // Persist panel position
+    const x = parseInt(panel.style.left, 10);
+    const y = parseInt(panel.style.top, 10);
+    if (!isNaN(x) && !isNaN(y)) {
+      try {
+        localStorage.setItem(PANEL_STORAGE_KEY, JSON.stringify({ x, y }));
+      } catch (_) { /* ignore */ }
+    }
+  }
+
+  function loadPanelPosition () {
+    try {
+      const raw = localStorage.getItem(PANEL_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+        return parsed;
+      }
+    } catch (_) { /* corrupted */ }
+    return null;
   }
 
   function togglePanel () {
@@ -215,6 +311,18 @@
   }
 
   function positionPanel () {
+    // If user has manually dragged the panel, restore saved position
+    const saved = loadPanelPosition();
+    if (saved) {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const px = Math.max(4, Math.min(saved.x, vw - PANEL_WIDTH - 4));
+      const py = Math.max(4, Math.min(saved.y, vh - 40));
+      panel.style.left = px + 'px';
+      panel.style.top  = py + 'px';
+      return;
+    }
+
     const bx = bubble.offsetLeft;
     const by = bubble.offsetTop;
     const vw = window.innerWidth;
